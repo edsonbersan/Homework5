@@ -1,5 +1,6 @@
 package com.example.homework5;
 
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -11,6 +12,7 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -43,6 +45,7 @@ public class MyCanvas extends View {
     HashMap <Integer, PathWrap> activePaths;
     Paint paint;
     CameraActivity cameraActivity;
+    ArrayList<Integer> order;
 
 
     public MyCanvas(Context context, AttributeSet attrs) {
@@ -50,6 +53,7 @@ public class MyCanvas extends View {
         activePaths = new HashMap<Integer, PathWrap>();
         inactivePaths = new ArrayList<PathWrap>();
         imagesArray = new ArrayList<ImageView>();
+        order = new ArrayList<Integer>();
 
         gestureDetectorCompat = new GestureDetectorCompat(getContext(), new MyGestureListener());
 
@@ -82,6 +86,8 @@ public class MyCanvas extends View {
     public void addPath(int id, float x, float y) {
         Path path = new Path();
         path.moveTo(x, y);
+
+        order.add(1); // 1 == paint, 0 == image
         if (activePaths.containsKey(id)) {
             inactivePaths.add(activePaths.get(id));
         }
@@ -100,11 +106,21 @@ public class MyCanvas extends View {
     }
 
     public void undoPath() {
-        if (activePaths.size() > 0) {
-            activePaths.remove(activePaths.size() - 1);
-        }
-        else if (inactivePaths.size() > 0) {
-            inactivePaths.remove(inactivePaths.size() - 1);
+        if (order.size() > 0) {
+            if (order.get(order.size() - 1) == 1) { // last was paint
+                if (activePaths.size() > 0) {
+                    activePaths.remove(activePaths.size() - 1);
+                } else if (inactivePaths.size() > 0) {
+                    inactivePaths.remove(inactivePaths.size() - 1);
+                }
+            }
+            else {
+                ImageView imageView = imagesArray.get(imagesArray.size() - 1);
+                imageView.setVisibility(INVISIBLE);
+                imageView.clearAnimation();
+                imagesArray.remove(imagesArray.size() - 1);
+            }
+            order.remove(order.size() - 1);
         }
         invalidate();
     }
@@ -125,7 +141,6 @@ public class MyCanvas extends View {
 
     public void onDoubleTapp(MotionEvent event) {
         addImage(event, 0);
-        undoPath();
     }
 
     public void onLongPresss(MotionEvent event) {
@@ -133,21 +148,33 @@ public class MyCanvas extends View {
     }
 
     private void addImage(MotionEvent event, int type) {
+        order.add(0);
         ImageView imageView = new ImageView(getContext());
         imageView.setX(event.getX() - 85);
         imageView.setY(event.getY() - 85);
-
-        if (type == 0) {
-            imageView.setBackgroundResource(R.drawable.kidao);
-        }
-        else {
-            imageView.setBackgroundResource(R.drawable.hokies);
-        }
 
         imageView.setScaleType(ImageView.ScaleType.FIT_XY);
         imageView.setLayoutParams(new ViewGroup.LayoutParams(200, 200));
         cameraActivity.constraintLayout.addView(imageView);
         imagesArray.add(imageView);
+
+
+        if (type == 0) {
+            imageView.setBackgroundResource(R.drawable.kidao);
+            ObjectAnimator imageViewAnimator = ObjectAnimator.ofFloat(imageView,View.ROTATION, 20f);
+            imageViewAnimator.setRepeatCount(Animation.INFINITE);
+            imageViewAnimator.setRepeatMode(ObjectAnimator.REVERSE);
+            imageViewAnimator.setDuration(100);
+            imageViewAnimator.start();
+        }
+        else {
+            imageView.setBackgroundResource(R.drawable.hokies);
+            ObjectAnimator imageViewAnimator = ObjectAnimator.ofFloat(imageView,View.ROTATION, 360);
+            imageViewAnimator.setRepeatCount(Animation.INFINITE);
+            imageViewAnimator.setRepeatMode(ObjectAnimator.REVERSE);
+            imageViewAnimator.setDuration(2000);
+            imageViewAnimator.start();
+        }
     }
 
     @Override

@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.Image;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -25,6 +26,8 @@ public class CameraActivity extends AppCompatActivity {
     MyCanvas myCanvas;
 
     Button redB, greenB, blueB, undoB, clearB, doneB;
+
+    Bitmap imageBitmap;
 
     public ConstraintLayout constraintLayout;
 
@@ -50,9 +53,9 @@ public class CameraActivity extends AppCompatActivity {
         imageView = findViewById(R.id.picture);
         String currentPhotoPath = getIntent().getStringExtra(ButtonActivity.PICTURE_KEY);
 
-        Bitmap bitmap = BitmapFactory.decodeFile(currentPhotoPath);
+        imageBitmap = BitmapFactory.decodeFile(currentPhotoPath);
 
-        imageView.setImageBitmap(bitmap);
+        imageView.setImageBitmap(imageBitmap);
 
 
         redB.setOnClickListener(new View.OnClickListener() {
